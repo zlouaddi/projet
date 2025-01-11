@@ -4,5 +4,4 @@ Description:Le projet Système d'Information pour la Gestion des Bibliothèques 
 
 
 par:
-   Zakariae louaddi
-   Mohammed al akrame sadak
+   Zakariae louaddi et Mohammed al akrame sadak
