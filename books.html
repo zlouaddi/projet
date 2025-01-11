@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Livres - Bibliothèque</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    #home,#history,#user{
+        text-decoration: none;
+        border: 1px black;
+        border-style: solid;
+        background-color: #4caf50;
+        border-radius: 10px;
+        color: white;
+        margin: 4px;
+        padding: 5px;
+    }
+    #home:hover,#history:hover,#user:hover{
+        background-color:  black;
+        
+    }   
+    
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gestion des Livres</h1>
+    <nav>
+      <a href="index.html"  id="home">Accueil</a>
+      <a href="users.html" id="user">Utilisateurs</a>
+      <a href="history.html" id="history">Historique</a>
+    </nav>
+  </header>
+  <main>
+    <input type="text" id="search-book" placeholder="Rechercher un livre">
+    <ul id="book-list"></ul>
+    <form id="add-book-form">
+      <input type="text" id="book-title" placeholder="Titre du livre" required>
+      <input type="number" id="book-stock" placeholder="Stock initial" required>
+      <button type="submit">Ajouter un livre</button>
+    </form>
+  </main>
+
+  <!-- Fenêtre modale pour emprunter un livre -->
+  <div id="borrow-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" style="color: white;">&times;</span>
+      <h2 style="color: white;">Emprunter un livre</h2>
+      <p style="color: white;">Sélectionnez un utilisateur :</p>
+      <select id="user-select"></select>
+      <button id="confirm-borrow">Confirmer l'emprunt</button>
+    </div>
+  </div>
+
+  <script>
+    let books = JSON.parse(localStorage.getItem('books')) || [];
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    let history = JSON.parse(localStorage.getItem('history')) || [];
+    let selectedBookIndex = null;
+  
+    // Rendu des livres
+    function renderBooks(filter = '') {
+      const bookList = document.getElementById('book-list');
+      bookList.innerHTML = '';
+      books
+        .filter(book => book.title.toLowerCase().includes(filter.toLowerCase()))
+        .forEach((book, index) => {
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${book.title}</strong> (Stock : ${book.stock})`;
+  
+          // Bouton emprunter
+          const borrowBtn = document.createElement('button');
+          borrowBtn.textContent = 'Emprunter';
+          borrowBtn.onclick = () => openBorrowModal(index);
+  
+          // Bouton retour
+          const returnBtn = document.createElement('button');
+          returnBtn.textContent = 'Retourner';
+          returnBtn.onclick = () => returnBook(index);
+  
+          // Bouton supprimer
+          const deleteBtn = document.createElement('button');
+          deleteBtn.textContent = 'Supprimer';
+          deleteBtn.onclick = () => {
+            books.splice(index, 1);
+            saveBooks();
+            renderBooks();
+          };
+  
+          // Ajouter les boutons
+          li.appendChild(borrowBtn);
+          li.appendChild(returnBtn);
+          li.appendChild(deleteBtn);
+          bookList.appendChild(li);
+        });
+    }
+  
+    // Ouvrir la fenêtre modale pour emprunter un livre
+    function openBorrowModal(index) {
+      selectedBookIndex = index;
+      const userSelect = document.getElementById('user-select');
+      userSelect.innerHTML = '';
+      users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.name; // Suppose que chaque utilisateur a une propriété "name"
+        option.textContent = user.name;
+        userSelect.appendChild(option);
+      });
+  
+      const modal = document.getElementById('borrow-modal');
+      modal.style.display = 'block';
+    }
+  
+    // Confirmer l'emprunt
+    document.getElementById('confirm-borrow').addEventListener('click', () => {
+      const userSelect = document.getElementById('user-select');
+      const selectedUser = userSelect.value;
+  
+      if (selectedBookIndex !== null && selectedUser) {
+        borrowBook(selectedBookIndex, selectedUser);
+        const modal = document.getElementById('borrow-modal');
+        modal.style.display = 'none';
+      }
+    });
+  
+    // Fermer la fenêtre modale
+    document.querySelector('.close').addEventListener('click', () => {
+      const modal = document.getElementById('borrow-modal');
+      modal.style.display = 'none';
+    });
+  
+    // Fonction pour emprunter un livre
+    function borrowBook(index, user) {
+      if (books[index].stock > 0) {
+        books[index].stock--;
+        saveBooks();
+        addToHistory(books[index].title, user, 'Emprunt');
+        renderBooks();
+      } else {
+        alert('Stock épuisé !');
+      }
+    }
+  
+    // Fonction pour retourner un livre
+    function returnBook(index) {
+      books[index].stock++;
+      saveBooks();
+      addToHistory(books[index].title, 'Utilisateur inconnu', 'Retour');
+      renderBooks();
+    }
+  
+    // Ajouter un livre
+    document.getElementById('add-book-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('book-title').value.trim();
+      const stock = parseInt(document.getElementById('book-stock').value);
+      if (title && stock >= 0) {
+        books.push({ title, stock });
+        saveBooks();
+        renderBooks();
+        e.target.reset();
+      }
+    });
+  
+    // Barre de recherche
+    document.getElementById('search-book').addEventListener('input', (e) => {
+      renderBooks(e.target.value);
+    });
+  
+    // Ajouter une entrée à l’historique
+    function addToHistory(bookTitle, user, action) {
+      const entry = {
+        book: bookTitle,
+        user: user, // Utilisateur comme chaîne de caractères
+        date: new Date().toLocaleString(),
+        action: action,
+        returned: action === 'Retour'
+      };
+      history.push(entry);
+      localStorage.setItem('history', JSON.stringify(history));
+    }
+  
+    // Sauvegarder les livres
+    function saveBooks() {
+      localStorage.setItem('books', JSON.stringify(books));
+    }
+  
+    // Initialisation
+    renderBooks();
+  </script>
+  
+</body>
+</html>
+
+

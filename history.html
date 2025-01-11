@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historique - Bibliothèque</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+     #home2,#books,#user1{
+        text-decoration: none;
+        border: 1px black;
+        border-style: solid;
+        background-color: #4caf50;
+        border-radius: 10px;
+        color: white;
+        margin: 4px;
+        padding: 5px;
+    }
+    #home2:hover,#books:hover,#user1:hover{
+        background-color:  black;
+        
+    }   
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Historique des Actions</h1>
+    <nav>
+      <a href="index.html" id="home2">Accueil</a>
+      <a href="books.html" id="books">Livres</a>
+      <a href="users.html" id="user1">Utilisateurs</a>
+    </nav>
+  </header>
+  <main>
+    <button id="reset-history">Réinitialiser l'historique</button>
+    <table>
+      <thead>
+        <tr>
+          <th>Livre</th>
+          <th>Utilisateur</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="history-list"></tbody>
+    </table>
+  </main>
+
+  <script>
+    let history = JSON.parse(localStorage.getItem('history')) || [];
+
+    // Rendu de l’historique
+    function renderHistory() {
+      const historyList = document.getElementById('history-list');
+      historyList.innerHTML = '';
+      history.forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${entry.book}</td>
+          <td>${entry.user}</td>
+          <td>${entry.date}</td>
+          <td>${entry.action}</td>
+        `;
+        historyList.appendChild(row);
+      });
+    }
+
+    // Réinitialiser l’historique
+    document.getElementById('reset-history').addEventListener('click', () => {
+      if (confirm('Êtes-vous sûr de vouloir réinitialiser l’historique ?')) {
+        history = [];
+        localStorage.setItem('history', JSON.stringify(history));
+        renderHistory();
+      }
+    });
+
+    // Initialisation
+    renderHistory();
+  </script>
+</body>
+</html>
+

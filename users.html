@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utilisateurs - Bibliothèque</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+     #home1{
+        text-decoration: none;
+        border: 1px black;
+        border-style: solid;
+        background-color: #4caf50;
+        border-radius: 10px;
+        color: white;
+        margin: 4px;
+        padding: 5px;
+    }
+    #home1:hover{
+        background-color:  black;
+        
+    }   
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gestion des Utilisateurs</h1>
+    <nav>
+      <a href="index.html" id="home1">Accueil</a>
+    </nav>
+  </header>
+  <main>
+    <input type="text" id="search-user" placeholder="Rechercher un utilisateur">
+    <ul id="user-list"></ul>
+    <form id="add-user-form">
+      <input type="text" id="user-name" placeholder="Nom de l'utilisateur" required>
+      <button type="submit">Ajouter un utilisateur</button>
+    </form>
+  </main>
+
+  <script>
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+
+    function renderUsers(filter = '') {
+      const userList = document.getElementById('user-list');
+      userList.innerHTML = '';
+      users
+        .filter(user => user.name.toLowerCase().includes(filter.toLowerCase()))
+        .forEach((user, index) => {
+          const li = document.createElement('li');
+          li.textContent = user.name;
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.textContent = 'Supprimer';
+          deleteBtn.onclick = () => {
+            users.splice(index, 1);
+            saveUsers();
+            renderUsers();
+          };
+
+          li.appendChild(deleteBtn);
+          userList.appendChild(li);
+        });
+    }
+
+    document.getElementById('add-user-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('user-name').value.trim();
+      if (name) {
+        users.push({ name });
+        saveUsers();
+        renderUsers();
+        e.target.reset();
+      }
+    });
+
+    document.getElementById('search-user').addEventListener('input', (e) => {
+      renderUsers(e.target.value);
+    });
+
+    function saveUsers() {
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    renderUsers();
+  </script>
+</body>
+</html>
